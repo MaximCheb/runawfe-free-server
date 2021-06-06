@@ -20,6 +20,7 @@ import ru.runa.wfe.var.UserType;
 import ru.runa.wfe.var.VariableProvider;
 import ru.runa.wfe.var.dto.WfVariable;
 import ru.runa.wfe.var.format.UserTypeFormat;
+import ru.runa.wfe.datasource.DataSourceStuff;
 
 /**
  * @author Alekseev Mikhail
@@ -38,16 +39,22 @@ public class InternalStorageHandler extends OfficeFilesSupplierHandler<DataBindi
         final StoreService storeService = StoreServiceFactory.create(
                 DataSourceStorage.parseDataSource(config.getInputFilePath(), variableProvider),
                 variableProvider
-        );
+        );        
         DataBinding binding = null;
         final StoreHelper storeHelper = new StoreHelper(config, variableProvider, storeService);
-        for( DataBinding variableBinding : config.getBindings()){
-        	WfVariable variableBind = variableProvider.getVariableNotNull(variableBinding.getVariableName());
-            log.error("binding name" + variableBinding.getVariableName(), null);
-            if(variableBind.getDefinition().getUserType()!=null){
-                binding = variableBinding;
+        
+        if (config.getInputFilePath().substring(DataSourceStuff.PATH_PREFIX_DATA_SOURCE.length()+1).equals(DataSourceStuff.INTERNAL_STORAGE_DATA_SOURCE_NAME)){
+             binding = Iterables.getOnlyElement(config.getBindings());
+        }
+        else {
+            for (DataBinding variableBinding : config.getBindings()) {
+                WfVariable variableBind = variableProvider.getVariableNotNull(variableBinding.getVariableName());
+                if (variableBind.getDefinition().getUserType() != null) {
+                    binding = variableBinding;
+                }
             }
         }
+        
         try {
             final ExecutionResult executionResult = execute(variableProvider, binding, storeHelper);
 
